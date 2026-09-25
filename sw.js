@@ -2,7 +2,7 @@
    Bump CACHE_VERSION whenever you change any file below, otherwise phones
    that already installed the app will keep serving the old copy. */
 
-const CACHE_VERSION = "oil-palm-basics-v4";
+const CACHE_VERSION = "oil-palm-basics-v5";
 
 const ASSETS = [
   "./",
@@ -11,14 +11,14 @@ const ASSETS = [
   "./data.js",
   "./app.js",
   "./manifest.webmanifest",
-  "./icons/logo.png",
-  "./icons/favicon-32.png",
-  "./icons/apple-touch-icon.png",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-192-maskable.png",
-  "./icons/icon-512-maskable.png",
-  "./icons/og-image.png"
+  "./logo.png",
+  "./favicon-32.png",
+  "./apple-touch-icon.png",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./icon-192-maskable.png",
+  "./icon-512-maskable.png",
+  "./og-image.png"
 ];
 
 /* Cache each file on its own. cache.addAll() rejects the whole install if a
