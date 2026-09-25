@@ -2,7 +2,7 @@
    Bump CACHE_VERSION whenever you change any file below, otherwise phones
    that already installed the app will keep serving the old copy. */
 
-const CACHE_VERSION = "oil-palm-basics-v2";
+const CACHE_VERSION = "oil-palm-basics-v3";
 
 const ASSETS = [
   "./",
@@ -17,7 +17,8 @@ const ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-192-maskable.png",
-  "./icons/icon-512-maskable.png"
+  "./icons/icon-512-maskable.png",
+  "./icons/og-image.png"
 ];
 
 self.addEventListener("install", (event) => {
