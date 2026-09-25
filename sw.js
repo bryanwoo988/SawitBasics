@@ -2,13 +2,14 @@
    Bump CACHE_VERSION whenever you change any file below, otherwise phones
    that already installed the app will keep serving the old copy. */
 
-const CACHE_VERSION = "oil-palm-basics-v5";
+const CACHE_VERSION = "oil-palm-basics-v6";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./data.js",
+  "./figures.js",
   "./app.js",
   "./manifest.webmanifest",
   "./logo.png",

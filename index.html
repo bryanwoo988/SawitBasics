@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Oil Palm Basics · 油棕基础 · Sawit Basics</title>
-<meta name="description" content="A trilingual field and mill reference for new oil palm plantation executives — planting material, harvesting, grading, fertiliser, pests and key numbers.">
+<meta name="description" content="A trilingual field and mill reference for new oil palm plantation executives — planting material, harvesting, grading, fertiliser, pests, the mill, Malaysian rules and key numbers.">
 <meta name="theme-color" content="#f1f4ec">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -42,6 +42,10 @@
 
 <header class="topbar">
   <div class="topbar-inner">
+    <button type="button" class="icon-btn toc-btn" id="tocBtn" aria-label="Open contents">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h11"/></svg>
+    </button>
+
     <div class="brand">
       <img src="./logo.png" alt="" width="38" height="38">
       <div class="brand-text">
@@ -59,16 +63,33 @@
     <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch light / dark"></button>
 
     <div class="searchwrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+      <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
       <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search">
       <button type="button" class="clear-btn hidden" id="clearBtn" aria-label="Clear search">&times;</button>
+      <div class="hits" id="hits" role="listbox"></div>
     </div>
   </div>
 </header>
 
+<!-- contents drawer (phones and tablets) -->
+<div class="sheet" id="tocSheet" aria-hidden="true">
+  <div class="sheet-panel" role="dialog" aria-modal="true">
+    <div class="sheet-head">
+      <span id="tocTitle">Contents</span>
+      <button type="button" class="icon-btn" id="tocClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <nav class="sheet-body" id="sheetToc"></nav>
+  </div>
+</div>
+
 <div class="shell">
 
-  <nav class="rail" id="rail" aria-label="Contents"></nav>
+  <nav class="rail" aria-label="Contents">
+    <h2 id="railTitle">Contents</h2>
+    <div id="railToc"></div>
+  </nav>
 
   <main>
     <div class="hero">
@@ -77,20 +98,21 @@
       <p class="hero-meta" id="heroMeta"></p>
     </div>
 
-    <div class="empty hidden" id="empty"></div>
-
     <div id="content"></div>
 
     <footer class="page-foot">
       <p id="footText"></p>
-      <p>Content adapted from the <em>Smallholder Oil Palm Handbook</em>, Modules 1–5, 3rd edition (2016) by Woittiez, Haryono, Turhina, Dani, Dukan &amp; Smit — Wageningen University and SNV, licensed CC BY-NC-SA 3.0 — together with MPOB, <em>Overview of the Malaysian Oil Palm Industry 2025</em>.</p>
+      <p>Photos and figures from the <em>Smallholder Oil Palm Handbook</em>, Modules 1–5, 3rd edition (2016) by Woittiez, Haryono, Turhina, Dani, Dukan &amp; Smit — Wageningen University and SNV — licensed CC BY-NC-SA 3.0. Full list in the Sources chapter.</p>
       <p class="install-hint" id="installHint"></p>
     </footer>
   </main>
 
 </div>
 
+<div class="lightbox" id="lightbox" aria-hidden="true"></div>
+
 <script src="./data.js"></script>
+<script src="./figures.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

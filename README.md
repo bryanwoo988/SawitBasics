@@ -10,11 +10,14 @@ interviews or their first months in the field.
 |---|---|
 | `index.html` | Page shell. Everything else loads from here. |
 | `styles.css` | All styling, including dark mode. |
-| `data.js` | All content in three languages. **Edit this file to change wording or add topics.** |
+| `data.js` | All text content in three languages. **Edit this file to change wording or add topics.** |
+| `figures.js` | Which photo goes under which topic, the trilingual captions, and the Sources list. |
+| `fig-*.webp` | 83 photographs and diagrams from the handbook. |
 | `app.js` | Language switch, dark mode, search, quiz, service worker registration. |
 | `sw.js` | Service worker — makes the app work with no signal. |
 | `manifest.webmanifest` | App name, colours and icons for "Add to Home Screen". |
-| `icons/` | App icons generated from your palm fruit image. |
+| `logo.png`, `icon-*.png`, `favicon-32.png`, `apple-touch-icon.png` | App icons generated from your palm fruit image. |
+| `og-image.png`, `og-image-wide.png` | Thumbnails used by WhatsApp and other link previews. |
 | `.nojekyll` | Tells GitHub Pages to serve the files as they are. |
 
 ## Publishing on GitHub Pages
@@ -38,12 +41,12 @@ half-broken in ways that are easy to miss.
 1. `https://bryanwoo988.github.io/SawitBasics/` — the app itself. If the palm icon next to
    the title shows as a broken square, the `icons/` folder did not upload.
 2. `https://bryanwoo988.github.io/SawitBasics/icons/logo.png` — must show the palm fruit.
-3. `https://bryanwoo988.github.io/SawitBasics/icons/og-image.png` — must show the palm fruit
+3. `https://bryanwoo988.github.io/SawitBasics/og-image.png` — must show the palm fruit
    on a dark green square. This is the WhatsApp thumbnail.
 
-GitHub Pages is case-sensitive: `Icons/Logo.png` is not the same file as `icons/logo.png`.
-When uploading through the GitHub website, drag the whole `icons` **folder**, not the
-files inside it — dragging files individually loses the folder.
+This build keeps every file flat in the repository root — there is no `icons/` folder, so
+nothing breaks if the GitHub web uploader drops folder structure. GitHub Pages is
+case-sensitive: `Logo.png` is not the same file as `logo.png`.
 
 ## Updating the content later
 
@@ -58,7 +61,10 @@ files inside it — dragging files individually loses the folder.
 
 - Woittiez, L.S., Haryono, S., Turhina, S., Dani, H., Dukan, T.P., Smit, H. (2016).
   *Smallholder Oil Palm Handbook*, Modules 1–5, 3rd edition. Wageningen University and
-  SNV International Development Organisation. Licensed CC BY-NC-SA 3.0.
+  SNV International Development Organisation. Licensed CC BY-NC-SA 3.0. Every
+  photograph in the app comes from these five modules. Two photos carry their own
+  credit inside the handbook and keep it in the app: the rat (IRRI photos, Wikimedia
+  Commons) and the nettle caterpillar (L.P. Koh, Flickr).
 - MPOB, *Overview of the Malaysian Oil Palm Industry 2025* — planted area, CPO
   production, FFB yield, OER and prices.
 - MPOB licensing guidance under the Malaysian Palm Oil Board Act 1998 (Act 582);
@@ -77,7 +83,32 @@ same licence.
 00 Key numbers · 01 The palm and the plantation · 02 Planting material (dura, pisifera,
 tenera) · 03 Harvesting, grading and transport · 04 Plantation maintenance ·
 05 Fertiliser and nutrition · 06 Pests and diseases · 07 The mill · 08 Working in
-Malaysia (MPOB licence, MSPO, prices) · 09 Glossary · 10 Self-test quiz
+Malaysia (MPOB licence, MSPO, prices) · 09 Glossary · 10 Sources · 11 Self-test quiz
+
+## How to use it
+
+- **Contents** — a sticky two-level list on a wide screen, or the ☰ button on a phone.
+  Tap a sub-topic and it opens and flashes so you can see where you landed.
+- **Search** — type and pick from the drop-down. It jumps to the topic, opens it and
+  highlights the word. Arrow keys and Enter work too.
+- **Photos** — tap any photo to see it full screen. Esc or a tap closes it.
+
+## Adding or changing a photo
+
+1. Put the image file next to `index.html`. Keep it under about 100 KB — 640 px wide
+   WebP at quality 66 is what the existing ones use.
+2. In `figures.js`, add an entry under the matching `"chapter/topic"` key with `src`,
+   `w`, `h` and a caption in all three languages. Add `full: true` for a labelled
+   diagram that should run the full width instead of sitting in the thumbnail grid.
+3. Bump `CACHE_VERSION` in `sw.js`.
+
+## Offline behaviour
+
+The text, layout and code are cached when the app is first opened, so every chapter
+reads fine with no signal. The 83 photos are **not** pre-cached — that would mean a
+3.8 MB download on first open. Each photo is cached the first time it is viewed, so
+scroll through the chapters once on wi-fi before taking the app into a block with no
+coverage.
 
 ## Link previews (WhatsApp, Telegram, LinkedIn)
 
@@ -110,6 +141,7 @@ force a refresh.
 
 - 三语切换按钮在右上角（EN / 中文 / BM），夜间模式按钮在旁边，选择会自动记住。
 - 搜索框可以搜全部内容，包括表格和术语表。
-- 修改内容只需改 `data.js`；每条内容都有 `en`、`zh`、`ms` 三种语言。
+- 修改文字只需改 `data.js`；改图片和图注改 `figures.js`。每条内容都有 `en`、`zh`、`ms` 三种语言。
+- 第 10 章「参考来源」只列真正用到的资料。加新内容时，记得同时在 `figures.js` 的 `SOURCES` 里补上来源。
 - **改完内容后，记得把 `sw.js` 里的 `CACHE_VERSION` 改一个新版本号**，否则已经安装到手机上的旧版本不会更新。
 - 上传到 GitHub 时，把所有文件放在仓库根目录，`icons/` 要保持文件夹结构。
