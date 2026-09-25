@@ -428,17 +428,19 @@ function buildIndex() {
     });
   });
   $$("#numbers .fact").forEach((card) => {
+    const parts = $$(".k, .v, .n", card).map((n) => n.textContent.trim());
     index.push({
       id: "numbers", kind: "fact",
-      title: $(".k", card).textContent + " — " + $(".v", card).textContent,
+      title: parts[0] + " — " + parts[1],
       where: T(LBL.keyNumbersShort),
-      text: card.textContent.replace(/\s+/g, " ")
+      text: parts.join(" · ")
     });
   });
   $$("#glossary .gterm").forEach((card) => {
+    const parts = $$(".en, .alt, .def", card).map((n) => n.textContent.trim());
     index.push({
-      id: "glossary", kind: "term", title: $(".en", card).textContent,
-      where: T(LBL.glossary), text: card.textContent.replace(/\s+/g, " ")
+      id: "glossary", kind: "term", title: parts[0],
+      where: T(LBL.glossary), text: parts.join(" · ")
     });
   });
 }
@@ -448,6 +450,18 @@ function snippet(text, q) {
   if (i === -1) return text.slice(0, 90);
   const from = Math.max(0, i - 35);
   return (from > 0 ? "…" : "") + text.slice(from, from + 110).trim() + "…";
+}
+
+/* the panel is fixed, so place it under the input every time it opens —
+   a sticky header with a blur filter cannot clip or cover it */
+function placeHits() {
+  const panel = $("#hits");
+  if (!panel.classList.contains("open")) return;
+  const box = $("#search").getBoundingClientRect();
+  panel.style.top = (box.bottom + 7) + "px";
+  panel.style.left = box.left + "px";
+  panel.style.width = Math.max(box.width, Math.min(480, window.innerWidth - box.left - 14)) + "px";
+  panel.style.maxHeight = Math.max(180, window.innerHeight - box.bottom - 24) + "px";
 }
 
 function search(q) {
@@ -469,6 +483,7 @@ function search(q) {
   if (!scored.length) {
     panel.appendChild(el("div", "hit-empty", T(LBL.noHits)));
     panel.classList.add("open");
+    placeHits();
     return;
   }
 
@@ -489,6 +504,7 @@ function search(q) {
     panel.appendChild(row);
   });
   panel.classList.add("open");
+  placeHits();
 }
 
 function clearMarks() {
@@ -573,8 +589,11 @@ function render() {
   $("#tocTitle").textContent = T(LBL.contents);
   $("#tocClose").setAttribute("aria-label", T(LBL.close));
   $("#railTitle").textContent = T(LBL.contents);
-  $("#langSeg").setAttribute("aria-label", T(UI.lang));
-  $$("#langSeg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+  const NEXT = { en: "中文", zh: "BM", ms: "EN" };
+  const NAME = { en: "English", zh: "中文", ms: "Bahasa Melayu" };
+  $("#langNow").textContent = { en: "EN", zh: "中文", ms: "BM" }[lang];
+  $("#langBtn").setAttribute("aria-label", T(UI.lang) + ": " + NAME[lang]);
+  $("#langBtn").title = NAME[lang] + " → " + NEXT[lang];
 
   $("#heroH").textContent = T(UI.heroH);
   $("#heroP").textContent = T(UI.heroP);
@@ -613,12 +632,10 @@ function init() {
     applyTheme();
   });
 
-  $$("#langSeg button").forEach((b) => {
-    b.addEventListener("click", () => {
-      lang = b.dataset.lang;
-      localStorage.setItem("opb-lang", lang);
-      render();
-    });
+  $("#langBtn").addEventListener("click", () => {
+    lang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+    localStorage.setItem("opb-lang", lang);
+    render();
   });
 
   $("#tocBtn").addEventListener("click", openToc);
@@ -654,6 +671,9 @@ function init() {
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".searchwrap")) $("#hits").classList.remove("open");
   });
+
+  window.addEventListener("resize", placeHits);
+  window.addEventListener("scroll", placeHits, { passive: true });
 
   $("#lightbox").addEventListener("click", closeLightbox);
   document.addEventListener("keydown", (e) => {
