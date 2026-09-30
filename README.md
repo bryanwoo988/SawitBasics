@@ -13,8 +13,11 @@ interviews or their first months in the field.
 | `data.js` | All text content in three languages. **Edit this file to change wording or add topics.** |
 | `figures.js` | Which photo goes under which topic, the trilingual captions, and the Sources list. |
 | `fig-*.webp` | 83 photographs and diagrams from the handbook. |
-| `app.js` | Language switch, dark mode, search, quiz, service worker registration. |
-| `sw.js` | Service worker — makes the app work with no signal. |
+| `app.js` | Language switch, dark mode, search, quiz, the About & share drawer, and the update check. |
+| `updatelogic.js` | Decides whether a newer build is live and whether to apply it now or offer it. Unit-tested. |
+| `sw.js` | Service worker — makes the app work with no signal. No version number to bump. |
+| `qr.svg` | QR code shown in the About drawer. Encodes the published URL. |
+| `tests/` | `node --test tests/*.test.js` — covers the update logic and the service worker. |
 | `manifest.webmanifest` | App name, colours and icons for "Add to Home Screen". |
 | `logo.png`, `icon-*.png`, `favicon-32.png`, `apple-touch-icon.png` | App icons generated from your palm fruit image. |
 | `og-image.png`, `og-image-wide.png` | Thumbnails used by WhatsApp and other link previews. |
@@ -52,10 +55,16 @@ case-sensitive: `Logo.png` is not the same file as `logo.png`.
 
 1. Edit `data.js`. Each item carries `en`, `zh` and `ms` keys — keep all three, or the
    entry will fall back to English.
-2. Open `sw.js` and change `CACHE_VERSION` (for example `v1` → `v2`).
-   **This step matters.** Phones that already installed the app keep serving the cached
-   copy until the version string changes.
-3. Commit and push.
+2. Commit and push. That is the whole release.
+
+There is no version number to bump any more. Phones notice a new build by themselves:
+the page checks `index.html`'s `Last-Modified` when it is opened, when it comes back to
+the screen, and every fifteen minutes in use. If it has just been opened it reloads
+straight away; if you are in the middle of reading, it offers the update in a bar at
+the bottom instead of pulling the page out from under you.
+
+This used to be a hand-edited `CACHE_VERSION` in `sw.js`, and forgetting it left
+everyone who had installed the app on the old build indefinitely.
 
 ## Content sources
 
@@ -100,7 +109,7 @@ Malaysia (MPOB licence, MSPO, prices) · 09 Glossary · 10 Sources · 11 Self-te
 2. In `figures.js`, add an entry under the matching `"chapter/topic"` key with `src`,
    `w`, `h` and a caption in all three languages. Add `full: true` for a labelled
    diagram that should run the full width instead of sitting in the thumbnail grid.
-3. Bump `CACHE_VERSION` in `sw.js`.
+3. Commit and push — nothing else to remember.
 
 ## Offline behaviour
 
@@ -143,5 +152,7 @@ force a refresh.
 - 搜索框可以搜全部内容，包括表格和术语表。
 - 修改文字只需改 `data.js`；改图片和图注改 `figures.js`。每条内容都有 `en`、`zh`、`ms` 三种语言。
 - 第 10 章「参考来源」只列真正用到的资料。加新内容时，记得同时在 `figures.js` 的 `SOURCES` 里补上来源。
-- **改完内容后，记得把 `sw.js` 里的 `CACHE_VERSION` 改一个新版本号**，否则已经安装到手机上的旧版本不会更新。
+- 改完内容 push 上去就好，**不再需要改任何版本号**。手机会自己发现新版本：打开 App 时、切回 App 时、以及使用中每十五分钟各查一次。刚打开就直接更新；正在读东西就在底部弹一条提示，让你自己按。
+- 第一次打开 App 的人会先看到选语言的界面（English／中文／Bahasa Melayu，预设 English），选过以后就不会再出现，之后随时可以用右上角的地球按钮切换。
+- 右上角 ⋯ 按钮里有二维码和分享链接。换了网址的话要重新生成 `qr.svg`：`npx qrcode -t svg -o qr.svg -e M "<新网址>"`，同时改 `app.js` 里的 `APP_URL`。
 - 上传到 GitHub 时，把所有文件放在仓库根目录，`icons/` 要保持文件夹结构。

@@ -36,9 +36,59 @@
 <link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="stylesheet" href="./styles.css">
+
+<script>
+/* Runs before the first frame, so neither decision can flash.
+
+   First run — nobody has picked a language yet — puts up the welcome screen.
+   Deciding this from app.js would paint the English app first and drop the
+   picker on top of it a moment later.
+
+   The theme is set here for the same reason: <html> ships as data-theme
+   ="light", so a dark-mode phone used to show a white page until app.js
+   ran. Behind the full-bleed welcome screen that flash is the whole display.
+   app.js reads both back; this script is the only place they are decided. */
+(function () {
+  var d = document.documentElement;
+  try {
+    var lang = localStorage.getItem("opb-lang");
+    if (lang !== "en" && lang !== "zh" && lang !== "ms") d.classList.add("firstrun");
+    var t = localStorage.getItem("opb-theme");
+    if (t !== "light" && t !== "dark")
+      t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    d.setAttribute("data-theme", t);
+  } catch (e) {
+    /* localStorage can throw in private mode: show the picker, keep the
+       default theme — never leave the app unusable over a preference */
+    d.classList.add("firstrun");
+  }
+})();
+</script>
 </head>
 
 <body>
+
+<!-- first run only: pick a language before anything else is shown.
+     Trilingual by nature, so nothing here needs translating. -->
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div class="welcome-inner">
+    <img class="welcome-logo" src="./logo.png" alt="" width="72" height="72">
+    <h1 class="welcome-title" id="welcomeTitle">Oil Palm Basics<span>油棕基础</span><span>Sawit Basics</span></h1>
+    <p class="welcome-ask">Choose your language &middot; 选择语言 &middot; Pilih bahasa</p>
+    <div class="welcome-langs">
+      <button type="button" class="welcome-lang is-default" data-lang="en" lang="en">
+        English<small>Default</small>
+      </button>
+      <button type="button" class="welcome-lang" data-lang="zh" lang="zh-Hans">
+        中文<small>简体中文</small>
+      </button>
+      <button type="button" class="welcome-lang" data-lang="ms" lang="ms">
+        Bahasa Melayu<small>Bahasa Malaysia</small>
+      </button>
+    </div>
+    <p class="welcome-foot">You can change this any time from the globe button at the top.</p>
+  </div>
+</div>
 
 <header class="topbar">
   <div class="topbar-inner">
@@ -61,6 +111,10 @@
 
     <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch light / dark"></button>
 
+    <button type="button" class="icon-btn" id="aboutBtn" aria-label="About and share">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
+    </button>
+
     <div class="searchwrap">
       <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
       <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search">
@@ -82,6 +136,34 @@
     <nav class="sheet-body" id="sheetToc"></nav>
   </div>
 </div>
+
+<!-- about & share drawer -->
+<div class="sheet" id="aboutSheet" aria-hidden="true">
+  <div class="sheet-panel sheet-right" role="dialog" aria-modal="true">
+    <div class="sheet-head">
+      <span id="aboutTitle">About &amp; share</span>
+      <button type="button" class="icon-btn" id="aboutClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body about-body">
+      <img class="about-logo" src="./logo.png" alt="" width="56" height="56">
+      <div class="about-name" id="aboutName">Oil Palm Basics</div>
+      <div class="about-by">Created by Bryan Woo</div>
+
+      <img class="qr" id="qrImg" src="./qr.svg" alt="" width="200" height="200">
+      <p class="share-cap" id="qrCap"></p>
+
+      <button type="button" class="share-btn" id="shareBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3m0 0L8 7m4-4 4 4"/></svg>
+        <span id="shareLabel">Share the app link</span>
+      </button>
+      <p class="about-url" id="aboutUrl"></p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="shell">
 
@@ -108,10 +190,34 @@
 
 </div>
 
+<!-- shown when a newer build is live and the reader is mid-something -->
+<div class="upd-bar" id="updBar" role="status">
+  <span id="updText">A new version is ready</span>
+  <button type="button" class="upd-go" id="updGo">Update</button>
+  <button type="button" class="upd-later" id="updLater">Later</button>
+</div>
+
 <div class="lightbox" id="lightbox" aria-hidden="true"></div>
 
-<script src="./data.js"></script>
-<script src="./figures.js"></script>
-<script src="./app.js"></script>
+<script>
+/* 脚本是以 file.js?r=<这个 index.html 的版本> 请求的。
+
+   GitHub Pages 给每个文件打 max-age=600，在那十分钟里重新加载页面时，浏览器
+   会直接把内存里的旧脚本交回来，不问任何人 —— 于是新的 index.html 配着上一版
+   的 app.js 在跑。把版本放进 URL 之后，新的 index.html 要的是任何缓存都没见过
+   的地址，所以文件永远跟页面对得上，而且不需要任何人手动改版本号。
+
+   按顺序加载，app.js 最后。 */
+(function () {
+  var APP_SCRIPTS = ['data.js', 'figures.js', 'updatelogic.js', 'app.js'];
+  var r = encodeURIComponent(document.lastModified || '');
+  APP_SCRIPTS.forEach(function (src) {
+    var s = document.createElement('script');
+    s.src = './' + src + '?r=' + r;
+    s.async = false;
+    document.body.appendChild(s);
+  });
+})();
+</script>
 </body>
 </html>

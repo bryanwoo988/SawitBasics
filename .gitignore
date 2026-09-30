@@ -1,0 +1,4 @@
+# tooling artefacts, not part of the app
+.claude-flow/
+.swarm/
+.DS_Store

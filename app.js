@@ -3,13 +3,16 @@
 const LANGS = ["en", "zh", "ms"];
 const HTML_LANG = { en: "en", zh: "zh-Hans", ms: "ms" };
 
+/* Both of these were already decided by the script in index.html's head,
+   before the first frame. Reading the result back keeps one source of truth:
+   deciding again here could disagree with what is already on screen. */
+const firstRun = document.documentElement.classList.contains("firstrun");
+
 let lang = localStorage.getItem("opb-lang");
 if (!LANGS.includes(lang)) lang = "en";
 
-let theme = localStorage.getItem("opb-theme");
-if (theme !== "light" && theme !== "dark") {
-  theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
+let theme = document.documentElement.getAttribute("data-theme");
+if (theme !== "light" && theme !== "dark") theme = "light";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -402,6 +405,73 @@ function closeToc() {
   document.body.classList.remove("locked");
 }
 
+/* ---------------- language ---------------- */
+
+/* localStorage can throw in private mode. The language still has to change —
+   it just will not be remembered — so a failed write is not allowed to take
+   the switch down with it. */
+function setLang(next) {
+  if (!LANGS.includes(next)) return;
+  lang = next;
+  try { localStorage.setItem("opb-lang", lang); } catch (e) {}
+  render();
+}
+
+/* First run: the welcome screen is already up (index.html decided that before
+   the first frame). Choosing a language is the only way past it. */
+function initWelcome() {
+  if (!firstRun) return;
+  $$("#welcome .welcome-lang").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setLang(btn.dataset.lang);
+      document.documentElement.classList.remove("firstrun");
+    });
+  });
+}
+
+/* ---------------- about & share ---------------- */
+
+function openAbout() {
+  $("#aboutSheet").classList.add("open");
+  document.body.classList.add("locked");
+}
+function closeAbout() {
+  $("#aboutSheet").classList.remove("open");
+  document.body.classList.remove("locked");
+}
+
+/* Where the app lives. qr.svg encodes exactly this address — regenerate it
+   (npx qrcode -t svg -o qr.svg -e M "<url>") if the app ever moves. */
+const APP_URL = "https://bryanwoo988.github.io/SawitBasics/";
+
+let toastTimer;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+/* Share sheet where the phone has one, clipboard everywhere else. A cancelled
+   share throws AbortError — that is the user saying no, not a failure, so it
+   must not fall through to copying the link behind their back. */
+async function shareApp() {
+  const data = { title: T(UI.title), text: T(UI.shareText), url: APP_URL };
+  if (navigator.share) {
+    try { await navigator.share(data); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(APP_URL);
+    toast(T(UI.linkCopied));
+  } catch (e) {
+    /* no clipboard permission (or an insecure origin): the address is on
+       screen under the button, so there is still a way to take it */
+    toast(APP_URL);
+  }
+}
+
 /* ---------------- search ---------------- */
 
 let index = [];
@@ -601,6 +671,18 @@ function render() {
   $("#footText").textContent = T(UI.footer);
   $("#installHint").textContent = T(UI.install);
 
+  $("#aboutBtn").setAttribute("aria-label", T(UI.about));
+  $("#aboutTitle").textContent = T(UI.about);
+  $("#aboutClose").setAttribute("aria-label", T(LBL.close));
+  $("#aboutName").textContent = T(UI.title);
+  $("#qrCap").textContent = T(UI.qrCap);
+  $("#qrImg").alt = T(UI.qrAlt);
+  $("#shareLabel").textContent = T(UI.shareApp);
+  $("#updText").textContent = T(UI.updReady);
+  $("#updGo").textContent = T(UI.updNow);
+  $("#updLater").textContent = T(UI.updLater);
+  $("#aboutUrl").textContent = APP_URL.replace(/^https:\/\//, "");
+
   const main = $("#content");
   main.innerHTML = "";
   main.appendChild(renderFacts());
@@ -620,27 +702,161 @@ function render() {
   if (q) search(q);
 }
 
+/* ---------------- updates ---------------- */
+
+/* 新版本以前只能靠关掉 App 再重开才会到手机上，而 iPhone 上从主屏幕打开的
+   App 是「切回来」远多于「重新启动」的。现在页面在打开时、切回屏幕时、以及
+   使用中每十五分钟问一次服务器；怎么处理由 updatelogic.js 决定。service
+   worker 每个文件都跟服务器核对过，所以重载一定会拿到新版本。 */
+let visibleSince = Date.now(), updateReady = null, lastUpdateCheck = 0;
+
+/* 服务器上 index.html 的版本（updatelogic.js） */
+async function liveRevision() {
+  try {
+    const r = await fetch("./index.html", { method: "HEAD", cache: "no-cache" });
+    return r.ok ? r.headers.get("last-modified") : null;
+  } catch (e) { return null; }
+}
+
+async function checkForUpdate(opts) {
+  const asked = !!(opts && opts.asked);
+  if (!navigator.onLine) return false;
+  if (!asked && Date.now() - lastUpdateCheck < 60e3) return !!updateReady;
+  lastUpdateCheck = Date.now();
+  /* 也叫 worker 去更新，这样等我们重载的时候它已经备好新文件了 */
+  try {
+    const reg = "serviceWorker" in navigator && await navigator.serviceWorker.getRegistration();
+    if (reg) reg.update().catch(() => {});
+  } catch (e) {}
+  /* document.lastModified 是这个页面自己这份 index.html 的 Last-Modified，
+     不管它是从网络还是从离线缓存来的 */
+  const live = await liveRevision();
+  if (!newerRevision(document.lastModified, live)) return false;
+  updateReady = live;
+  actOnUpdate(asked);
+  return true;
+}
+
+/* 正在做某件事的人：抽屉开着、图片放大着、在搜索框里打字，或者还没选语言 */
+function appBusy() {
+  const a = document.activeElement;
+  return $("#tocSheet").classList.contains("open")
+    || $("#aboutSheet").classList.contains("open")
+    || $("#lightbox").classList.contains("open")
+    || document.documentElement.classList.contains("firstrun")
+    || !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+}
+
+function actOnUpdate(asked) {
+  if (!updateReady) return;
+  const what = updateAction({
+    hidden: document.visibilityState !== "visible",
+    sinceVisibleMs: Date.now() - visibleSince,
+    busy: appBusy(),
+    asked: !!asked
+  });
+  if (what === "apply") applyUpdate(false);
+  else if (what === "banner") showUpdateBar();
+}
+
+/* 重载到新版本，并且回到原来读的地方。自动的那次十分钟内每个版本只试一遍
+   （updatelogic.js：不能变成死循环）；用户自己按的那一下永远放行。 */
+function applyUpdate(byUser) {
+  let tried = null;
+  try { tried = JSON.parse(sessionStorage.getItem("opb:tried") || "null"); } catch (e) {}
+  if (byUser !== true && !mayAutoReload(tried, updateReady, Date.now())) { showUpdateBar(); return; }
+  try {
+    sessionStorage.setItem("opb:tried", JSON.stringify({ v: updateReady, at: Date.now() }));
+    /* 读到一半被弹回顶部比不更新还烦，所以位置和展开的章节都记下来 */
+    sessionStorage.setItem("opb:resume", JSON.stringify({
+      y: window.scrollY,
+      open: $$("details.topic[open]").map((d) => d.dataset.topic)
+    }));
+  } catch (e) {}
+  /* 浏览器自己也会在重载后恢复滚动位置，而且是在我们恢复之后才动手 —— 结果
+     就是把人送回页顶。这一次交给我们自己管；restoreAfterUpdate() 做完就交还。 */
+  try { history.scrollRestoration = "manual"; } catch (e) {}
+  location.reload();
+}
+
+/* 重载之后回到原来的位置。渲染是同步做完的，所以这时候章节都已经在页面上了。 */
+function restoreAfterUpdate() {
+  let r = null;
+  try {
+    r = JSON.parse(sessionStorage.getItem("opb:resume") || "null");
+    sessionStorage.removeItem("opb:resume");
+  } catch (e) {}
+  /* 只有这一次重载归我们管，管完就交还给浏览器 —— 不然普通的刷新、上一页
+     下一页也不会记得位置了 */
+  const handBack = () => { try { history.scrollRestoration = "auto"; } catch (e) {} };
+  if (!r) { handBack(); return; }
+
+  (r.open || []).forEach((id) => {
+    const d = $(`details.topic[data-topic="${CSS.escape(id)}"]`);
+    if (d) d.open = true;
+  });
+
+  if (typeof r.y !== "number") { handBack(); return; }
+
+  /* 展开章节会改变高度，图片也还在往里填，所以再摆一次才落得准。
+
+     不能只靠 requestAnimationFrame：文档在后台的时候它根本不会触发，那样
+     scrollRestoration 就会永远停在 "manual"，连普通的上一页下一页都不记得
+     位置了。所以两条路都留着，谁先到算谁的，只做一次。 */
+  window.scrollTo(0, r.y);
+  let done = false;
+  const settle = () => {
+    if (done) return;
+    done = true;
+    window.scrollTo(0, r.y);
+    handBack();
+  };
+  requestAnimationFrame(settle);
+  setTimeout(settle, 250);
+}
+
+function showUpdateBar() {
+  const bar = $("#updBar");
+  if (!bar || bar.classList.contains("on")) return;
+  bar.classList.add("on");
+}
+
 /* ---------------- wiring ---------------- */
 
 function init() {
   quizState = QUIZ.map(() => null);
   applyTheme();
+  initWelcome();
 
   $("#themeBtn").addEventListener("click", () => {
     theme = theme === "dark" ? "light" : "dark";
-    localStorage.setItem("opb-theme", theme);
+    try { localStorage.setItem("opb-theme", theme); } catch (e) {}
     applyTheme();
   });
 
   $("#langBtn").addEventListener("click", () => {
-    lang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
-    localStorage.setItem("opb-lang", lang);
-    render();
+    setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]);
   });
 
   $("#tocBtn").addEventListener("click", openToc);
   $("#tocClose").addEventListener("click", closeToc);
   $("#tocSheet").addEventListener("click", (e) => { if (e.target.id === "tocSheet") closeToc(); });
+
+  $("#updGo").addEventListener("click", () => applyUpdate(true));
+  /* 「稍后」只是把提示条收起来：下次切回 App 的时候更新还是会装上 */
+  $("#updLater").addEventListener("click", () => $("#updBar").classList.remove("on"));
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    visibleSince = Date.now();
+    if (updateReady) actOnUpdate(); else checkForUpdate();
+  });
+  setInterval(() => { if (document.visibilityState === "visible") checkForUpdate(); }, 15 * 60e3);
+
+  $("#aboutBtn").addEventListener("click", openAbout);
+  $("#aboutClose").addEventListener("click", closeAbout);
+  $("#aboutSheet").addEventListener("click", (e) => { if (e.target.id === "aboutSheet") closeAbout(); });
+  $("#shareBtn").addEventListener("click", shareApp);
 
   let debounce;
   const input = $("#search");
@@ -680,19 +896,27 @@ function init() {
     if (e.key !== "Escape") return;
     if ($("#lightbox").classList.contains("open")) closeLightbox();
     else if ($("#tocSheet").classList.contains("open")) closeToc();
+    else if ($("#aboutSheet").classList.contains("open")) closeAbout();
   });
 
   render();
+  restoreAfterUpdate();
+  checkForUpdate();
 
   if (!window.matchMedia("(display-mode: standalone)").matches) {
     $("#installHint").classList.add("show");
   }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+/* index.html 现在是用脚本把这些文件插进来的（?r=<版本>），所以等这里跑到的
+   时候 DOMContentLoaded 可能已经过去了 —— 那样光挂监听器就永远不会启动。 */
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  });
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  /* updateViaCache 'none'：浏览器自己去查 sw.js 有没有更新时，直接问服务器，
+     不走它的 HTTP 缓存 */
+  const reg = () => navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" }).catch(() => {});
+  if (document.readyState === "complete") reg();
+  else window.addEventListener("load", reg);
 }

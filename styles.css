@@ -379,6 +379,196 @@ main { padding-top: 26px; min-width: 0; }
 .sheet-body .toc-chapter { font-size: .95rem; padding: 9px 10px 9px 11px; }
 .sheet-body .toc-sub { padding: 7px 8px; font-size: .86rem; }
 
+/* the about drawer comes in from the right, so it does not read as a
+   second copy of the contents drawer */
+.sheet-panel.sheet-right { inset: 0 0 0 auto; border-right: 0; border-left: 1px solid var(--line); }
+
+/* ---------- about & share ---------- */
+
+.about-body { display: grid; justify-items: center; text-align: center; gap: 0; }
+.about-logo { margin: 8px 0 10px; }
+.about-name { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; }
+.about-by { font-size: .84rem; color: var(--muted); margin-top: 3px; }
+
+/* The QR is pure black on white and must stay that way to scan, so it keeps
+   its own white card in dark mode rather than inheriting the page. */
+.qr {
+  display: block;
+  width: 200px;
+  height: 200px;
+  margin: 20px auto 12px;
+  padding: 10px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(8, 16, 12, .16);
+}
+
+.share-cap { margin: 0 0 16px; font-size: .84rem; color: var(--muted); max-width: 30ch; }
+
+.share-btn {
+  font: inherit;
+  font-size: .88rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+.share-btn:hover { border-color: var(--line-strong); }
+.share-btn svg { width: 17px; height: 17px; color: var(--green); flex: none; }
+
+.about-url { margin: 14px 0 0; font-size: .74rem; color: var(--muted); word-break: break-all; }
+
+/* ---------- first-run language picker ---------- */
+
+/* Hidden by default and shown only for .firstrun, so the markup can sit in
+   index.html and be decided before the first frame (see the script in head).
+   The other way round — hidden by a class app.js removes — would flash the
+   picker at everyone who has already chosen. */
+.welcome { display: none; }
+
+html.firstrun .welcome {
+  display: grid;
+  place-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 24px) 22px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  overflow-y: auto;
+}
+
+/* the app behind is inert until a language is chosen */
+html.firstrun body { overflow: hidden; }
+
+.welcome-inner { display: grid; justify-items: center; text-align: center; width: min(100%, 420px); }
+
+.welcome-logo { margin-bottom: 16px; }
+
+.welcome-title {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+.welcome-title span { font-size: 1.12rem; color: var(--muted); font-weight: 500; }
+
+.welcome-ask { margin: 20px 0 16px; font-size: .86rem; color: var(--muted); }
+
+.welcome-langs { display: grid; gap: 10px; width: 100%; }
+
+.welcome-lang {
+  font: inherit;
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 1.02rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.welcome-lang small { font-size: .74rem; font-weight: 400; color: var(--muted); }
+.welcome-lang:hover { border-color: var(--line-strong); }
+
+/* English is what the app falls back to, so it is what the screen suggests */
+.welcome-lang.is-default { border-color: var(--green); }
+.welcome-lang.is-default small { color: var(--green); }
+
+.welcome-foot { margin: 22px 0 0; font-size: .76rem; color: var(--muted); max-width: 34ch; }
+
+@media (max-width: 480px) {
+  .welcome-title { font-size: 1.3rem; }
+  .welcome-title span { font-size: 1rem; }
+  .welcome-logo { width: 60px; height: 60px; }
+}
+
+/* ---------- update bar ---------- */
+
+/* 正在读东西的人不会被直接重载打断，改成在底下弹这一条。 */
+.upd-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  transform: translate(-50%, 18px);
+  z-index: 80;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  /* left:50% makes the containing block start at the middle, so an auto width
+     only has half the viewport to resolve against — the label was collapsing
+     to one character per line. max-content sizes to the content instead, and
+     max-width still caps it on a narrow phone. */
+  width: max-content;
+  max-width: min(92vw, 460px);
+  padding: 10px 10px 10px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  box-shadow: 0 6px 24px rgba(8, 16, 12, .22);
+  opacity: 0;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.upd-bar.on { display: flex; opacity: 1; transform: translate(-50%, 0); }
+
+.upd-bar span { font-size: .86rem; margin-right: auto; }
+
+.upd-go, .upd-later {
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 600;
+  flex: none;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.upd-go { border: 0; background: var(--green); color: var(--bg); }
+.upd-later { border: 1px solid var(--line); background: transparent; color: var(--muted); }
+
+@media (max-width: 480px) {
+  .upd-bar { padding-left: 15px; gap: 7px; }
+  .upd-bar span { font-size: .8rem; }
+  .upd-go, .upd-later { padding: 0 11px; }
+}
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 26px);
+  transform: translate(-50%, 14px);
+  z-index: 90;
+  width: max-content;              /* same left:50% trap as .upd-bar */
+  max-width: min(88vw, 360px);
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: .86rem;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
 /* ---------- hero ---------- */
 
 .hero { display: grid; gap: 14px; margin-bottom: 34px; }

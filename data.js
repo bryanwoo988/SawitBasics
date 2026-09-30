@@ -32,7 +32,25 @@ const UI = {
              ms: "Untuk pembelajaran sahaja. Ikut SOP syarikat, label racun dan undang-undang tempatan (MPOB / Jabatan Pertanian) sebelum bertindak di ladang." },
   install: { en: "Tip: use your browser menu → “Add to Home Screen” to keep this on your phone and use it without signal.",
              zh: "提示：在浏览器菜单选择“添加到主屏幕”，即可放在手机上离线使用。",
-             ms: "Tip: guna menu pelayar → “Add to Home Screen” untuk simpan di telefon dan guna tanpa talian." }
+             ms: "Tip: guna menu pelayar → “Add to Home Screen” untuk simpan di telefon dan guna tanpa talian." },
+
+  /* ---- about & share ---- */
+  about:    { en: "About & share", zh: "关于与分享", ms: "Perihal & kongsi" },
+  createdBy:"Created by Bryan Woo",
+  qrCap:    { en: "Scan to open this app straight in a phone browser",
+              zh: "扫描二维码，就能用手机浏览器直接打开这个 App",
+              ms: "Imbas untuk membuka aplikasi ini terus dalam pelayar telefon" },
+  qrAlt:    { en: "QR code that opens this app", zh: "打开这个 App 的二维码", ms: "Kod QR untuk membuka aplikasi ini" },
+  shareApp: { en: "Share the app link", zh: "分享 App 链接", ms: "Kongsi pautan aplikasi" },
+  shareText:{ en: "Trilingual oil palm field and mill reference — works offline",
+              zh: "三语油棕田间与工厂速查 —— 可离线使用",
+              ms: "Rujukan ladang dan kilang sawit tiga bahasa — boleh guna luar talian" },
+  linkCopied:{ en: "Link copied", zh: "链接已复制", ms: "Pautan disalin" },
+
+  /* ---- update ---- */
+  updReady: { en: "A new version is ready", zh: "有新版本了", ms: "Versi baharu sudah sedia" },
+  updNow:   { en: "Update", zh: "立即更新", ms: "Kemas kini" },
+  updLater: { en: "Later", zh: "稍后", ms: "Nanti" }
 };
 
 /* ---------------- quick numbers ---------------- */
