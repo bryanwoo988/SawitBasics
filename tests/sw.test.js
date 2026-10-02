@@ -172,3 +172,13 @@ test('POST 之类的不插手', async () => {
   const out = await fire(ctx, 'fetch', {request: {method: 'POST', url: SCOPE + 'app.js'}});
   assert.strictEqual(out, undefined);
 });
+
+test('激活：同一个网域（bryanwoo988.github.io）上其他 App 的缓存不能删', async () => {
+  const {ctx, caches_} = makeScope(okNet());
+  await fire(ctx, 'install', {});
+  const others = ['opwiki-936c9276a0', 'pw-shell', 'pw-notice', 'ndvi-shell', 'meteo-0123456789'];
+  for (const n of others) caches_.set(n, new Map());
+  caches_.set('oil-palm-basics-v7', new Map());
+  await fire(ctx, 'activate', {});
+  assert.deepStrictEqual([...caches_.keys()].sort(), ['opb-shell', ...others].sort());
+});

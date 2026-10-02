@@ -66,7 +66,10 @@ self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
     /* 以前那些手动编号的缓存（oil-palm-basics-v1…v7）在这里清掉 */
-    await Promise.all(keys.filter((k) => k !== SHELL).map((k) => caches.delete(k)));
+    /* 只删自己的：bryanwoo988.github.io 上所有 App 共用同一个缓存空间，
+       别的 App（油棕百科、天气预测、NDVI…）的离线缓存不能动 */
+    const mine = (k) => k.startsWith('opb-') || k.startsWith('oil-palm-basics-');
+    await Promise.all(keys.filter((k) => mine(k) && k !== SHELL).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
