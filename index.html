@@ -36,6 +36,7 @@
 <link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./reader.css">
 
 <script>
 /* Runs before the first frame, so neither decision can flash.
@@ -86,16 +87,12 @@
         Bahasa Melayu<small>Bahasa Malaysia</small>
       </button>
     </div>
-    <p class="welcome-foot">You can change this any time from the globe button at the top.</p>
+    <p class="welcome-foot">Change it any time in Settings, at the bottom of the screen &middot; 可在底部「设置」更改 &middot; Tukar bila-bila masa di Tetapan, di bawah skrin</p>
   </div>
 </div>
 
 <header class="topbar">
   <div class="topbar-inner">
-    <button type="button" class="icon-btn toc-btn" id="tocBtn" aria-label="Open contents">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h11"/></svg>
-    </button>
-
     <div class="brand">
       <img src="./logo.png" alt="" width="38" height="38">
       <div class="brand-text">
@@ -103,17 +100,6 @@
         <div class="brand-sub" id="brandSub">Field &amp; mill reference</div>
       </div>
     </div>
-
-    <button type="button" class="lang-btn" id="langBtn" aria-label="Language">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>
-      <span id="langNow">EN</span>
-    </button>
-
-    <button type="button" class="icon-btn" id="themeBtn" aria-label="Switch light / dark"></button>
-
-    <button type="button" class="icon-btn" id="aboutBtn" aria-label="About and share">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
-    </button>
 
     <div class="searchwrap">
       <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
@@ -137,30 +123,69 @@
   </div>
 </div>
 
-<!-- about & share drawer -->
+<!-- settings: language, theme, read aloud, notes backup, about & share -->
 <div class="sheet" id="aboutSheet" aria-hidden="true">
   <div class="sheet-panel sheet-right" role="dialog" aria-modal="true">
     <div class="sheet-head">
-      <span id="aboutTitle">About &amp; share</span>
+      <span id="aboutTitle">Settings</span>
       <button type="button" class="icon-btn" id="aboutClose" aria-label="Close">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
-    <div class="sheet-body about-body">
-      <img class="about-logo" src="./logo.png" alt="" width="56" height="56">
-      <div class="about-name" id="aboutName">Oil Palm Basics</div>
-      <div class="about-by">Created by Bryan Woo</div>
-      <div class="about-by"><span id="aboutVer"></span> · <a href="#" id="whatsNew"></a></div>
+    <div class="sheet-body set-body">
+      <section class="set-group">
+        <h3 id="setLangH">Language</h3>
+        <div class="rd-seg set-seg" id="setLang">
+          <button type="button" data-lang="en" lang="en">English</button>
+          <button type="button" data-lang="zh" lang="zh-Hans">中文</button>
+          <button type="button" data-lang="ms" lang="ms">BM</button>
+        </div>
+      </section>
+      <section class="set-group">
+        <h3 id="setThemeH">Theme</h3>
+        <div class="rd-seg set-seg" id="setTheme">
+          <button type="button" data-theme="light" id="setThemeLight">Light</button>
+          <button type="button" data-theme="dark" id="setThemeDark">Dark</button>
+        </div>
+      </section>
+      <section class="set-group">
+        <h3 id="setReadH">Read aloud</h3>
+        <div id="readerSet"></div>
+      </section>
 
-      <img class="qr" id="qrImg" src="./qr.svg" alt="" width="200" height="200">
-      <p class="share-cap" id="qrCap"></p>
+      <section class="set-group about-body">
+        <img class="about-logo" src="./logo.png" alt="" width="56" height="56">
+        <div class="about-name" id="aboutName">Oil Palm Basics</div>
+        <div class="about-by">Created by Bryan Woo</div>
+        <div class="about-by"><span id="aboutVer"></span> · <a href="#" id="whatsNew"></a></div>
 
-      <button type="button" class="share-btn" id="shareBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3m0 0L8 7m4-4 4 4"/></svg>
-        <span id="shareLabel">Share the app link</span>
-      </button>
-      <p class="about-url" id="aboutUrl"></p>
+        <img class="qr" id="qrImg" src="./qr.svg" alt="" width="200" height="200">
+        <p class="share-cap" id="qrCap"></p>
+
+        <button type="button" class="share-btn" id="shareBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 15V3m0 0L8 7m4-4 4 4"/></svg>
+          <span id="shareLabel">Share the app link</span>
+        </button>
+        <p class="about-url" id="aboutUrl"></p>
+      </section>
     </div>
+  </div>
+</div>
+
+<!-- notes, highlights and bookmarks -->
+<div class="sheet" id="libSheet" aria-hidden="true">
+  <div class="sheet-panel sheet-right" role="dialog" aria-modal="true">
+    <div class="sheet-head">
+      <span id="libTitle">Notes</span>
+      <button type="button" class="icon-btn" id="libClose" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="rd-seg lib-seg" id="libSeg">
+      <button type="button" data-kind="notes" id="libNotes">Notes</button>
+      <button type="button" data-kind="marks" id="libMarks">Highlights</button>
+    </div>
+    <div class="sheet-body" id="libList"></div>
   </div>
 </div>
 
@@ -191,6 +216,15 @@
 
 </div>
 
+<!-- bottom navigation: everything the thumb needs, where the thumb is -->
+<nav class="bottomnav" id="bottomnav" aria-label="Menu">
+  <button type="button" data-nav="toc"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h11"/></svg><span id="navToc">Contents</span></button>
+  <button type="button" data-nav="listen"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg><span id="navListen">Read aloud</span></button>
+  <button type="button" data-nav="notes"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span id="navNotes">Notes</span></button>
+  <button type="button" data-nav="bookmarks"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span id="navBm">Bookmarks</span></button>
+  <button type="button" data-nav="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span id="navSet">Settings</span></button>
+</nav>
+
 <!-- shown when a newer build is live and the reader is mid-something -->
 <div class="upd-bar" id="updBar" role="status">
   <span id="updText">A new version is ready</span>
@@ -210,7 +244,7 @@
 
    按顺序加载，app.js 最后。 */
 (function () {
-  var APP_SCRIPTS = ['data.js', 'figures.js', 'updatelogic.js', 'whatsnew.js', 'releases.js', 'app.js'];
+  var APP_SCRIPTS = ['data.js', 'figures.js', 'updatelogic.js', 'whatsnew.js', 'releases.js', 'reader.js', 'app.js'];
   var r = encodeURIComponent(document.lastModified || '');
   APP_SCRIPTS.forEach(function (src) {
     var s = document.createElement('script');

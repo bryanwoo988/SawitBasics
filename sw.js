@@ -23,6 +23,8 @@ const SHELL_FILES = [
   './updatelogic.js',
   './whatsnew.js',
   './releases.js',
+  './reader.js',
+  './reader.css',
   './app.js',
   './manifest.webmanifest',
   './qr.svg',

@@ -54,12 +54,21 @@ const LBL = {
             zh: "没有找到。试试更短的词，或用英文——很多田间术语三种语言都说英文。",
             ms: "Tiada padanan. Cuba perkataan lebih pendek, atau istilah Inggeris." },
   close: { en: "Close", zh: "关闭", ms: "Tutup" },
-  openToc: { en: "Open contents", zh: "打开目录", ms: "Buka kandungan" }
+  openToc: { en: "Open contents", zh: "打开目录", ms: "Buka kandungan" },
+  settings: { en: "Settings", zh: "设置", ms: "Tetapan" },
+  language: { en: "Language", zh: "语言", ms: "Bahasa" },
+  theme: { en: "Theme", zh: "外观", ms: "Tema" },
+  light: { en: "Light", zh: "浅色", ms: "Cerah" },
+  dark: { en: "Dark", zh: "深色", ms: "Gelap" },
+  readAloud: { en: "Read aloud", zh: "朗读", ms: "Baca kuat" },
+  stopReading: { en: "Stop", zh: "停止", ms: "Henti" },
+  notes: { en: "Notes", zh: "笔记", ms: "Nota" },
+  highlights: { en: "Highlights", zh: "画线", ms: "Serlahan" },
+  bookmarks: { en: "Bookmarks", zh: "书签", ms: "Penanda" },
+  menu: { en: "Menu", zh: "菜单", ms: "Menu" }
 };
 
 const CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
-const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
-const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>';
 
 /* ---------------- theme ---------------- */
 
@@ -67,8 +76,7 @@ function applyTheme() {
   document.documentElement.setAttribute("data-theme", theme);
   const meta = $('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", theme === "dark" ? "#0d1511" : "#f1f4ec");
-  const btn = $("#themeBtn");
-  if (btn) btn.innerHTML = theme === "dark" ? SUN : MOON;
+  $$("#setTheme button").forEach((b) => b.classList.toggle("on", b.dataset.theme === theme));
 }
 
 /* ---------------- figures ---------------- */
@@ -396,14 +404,35 @@ function jumpTo(id, openIt) {
   }
 }
 
-function openToc() {
-  $("#tocSheet").classList.add("open");
+/* The contents, notes and settings drawers stop above the bottom bar, so the
+   bar stays usable: its buttons switch drawers, and tapping the open one again
+   closes it. Only one drawer is open at a time. */
+const DRAWERS = { toc: "#tocSheet", notes: "#libSheet", bookmarks: "#libSheet", settings: "#aboutSheet" };
+let openNav = null;
+
+function openDrawer(nav) {
+  closeDrawers();
+  Reader.clearSelection();
+  $(DRAWERS[nav]).classList.add("open");
   document.body.classList.add("locked");
+  openNav = nav;
+  markNav();
 }
-function closeToc() {
-  $("#tocSheet").classList.remove("open");
+function closeDrawers() {
+  $$(".sheet.open").forEach((n) => n.classList.remove("open"));
   document.body.classList.remove("locked");
+  openNav = null;
+  markNav();
 }
+function markNav() {
+  $$("#bottomnav button").forEach((b) => {
+    const on = b.dataset.nav === "listen" ? Reader.isListening() : b.dataset.nav === openNav;
+    b.classList.toggle("on", on);
+  });
+  $("#navListen").textContent = T(Reader.isListening() ? LBL.stopReading : LBL.readAloud);
+}
+function openToc() { openDrawer("toc"); }
+function closeToc() { closeDrawers(); }
 
 /* ---------------- language ---------------- */
 
@@ -432,12 +461,60 @@ function initWelcome() {
 /* ---------------- about & share ---------------- */
 
 function openAbout() {
-  $("#aboutSheet").classList.add("open");
-  document.body.classList.add("locked");
+  openDrawer("settings");
+  Reader.renderSettings($("#readerSet"));
 }
-function closeAbout() {
-  $("#aboutSheet").classList.remove("open");
-  document.body.classList.remove("locked");
+function closeAbout() { closeDrawers(); }
+
+/* ---------------- notes, highlights, bookmarks ---------------- */
+
+let libKind = "notes";
+
+function openLib(nav) {
+  libKind = nav === "bookmarks" ? "bookmarks" : (libKind === "bookmarks" ? "notes" : libKind);
+  openDrawer(nav);
+  drawLib();
+}
+function drawLib() {
+  const bm = libKind === "bookmarks";
+  $("#libTitle").textContent = T(bm ? LBL.bookmarks : LBL.notes);
+  $("#libSeg").hidden = bm;
+  $$("#libSeg button").forEach((b) => b.classList.toggle("on", b.dataset.kind === libKind));
+  Reader.renderList($("#libList"), libKind);
+}
+
+function navTo(nav) {
+  if (nav === "listen") {
+    closeDrawers();
+    Reader.listen();
+    markNav();
+    return;
+  }
+  if (openNav === nav) { closeDrawers(); return; }
+  if (nav === "toc") openToc();
+  else if (nav === "settings") openAbout();
+  else openLib(nav);
+}
+
+/* Every markable block gets a key that is the same in all three languages:
+   where it is, and its place there. */
+const TOPIC_UNITS = ":scope > p, :scope > h4, :scope > ul > li, :scope > .callout, :scope > .tablewrap tbody tr";
+
+function keyUnits() {
+  $$("details.topic").forEach((d) => {
+    const body = d.querySelector(".topic-body");
+    if (body) $$(TOPIC_UNITS, body).forEach((u, i) => { u.dataset.rk = d.dataset.topic + "#" + i; });
+  });
+  $$("#numbers .fact").forEach((u, i) => { u.dataset.rk = "numbers#" + i; });
+  $$("#glossary .gterm").forEach((u, i) => { u.dataset.rk = "glossary#" + i; });
+}
+
+function whereOf(u) {
+  const sec = u.closest(".section");
+  const h = sec && sec.querySelector(".section-head h2");
+  const tp = u.closest("details.topic");
+  const tt = tp && tp.querySelector("summary span");
+  return [h && h.textContent, tt && tt.textContent].filter(Boolean).join(" · ");
 }
 
 /* Where the app lives. qr.svg encodes exactly this address — regenerate it
@@ -654,16 +731,24 @@ function render() {
   $("#brandSub").textContent = T(UI.sub);
   $("#search").placeholder = T(UI.search);
   $("#clearBtn").setAttribute("aria-label", T(UI.clear));
-  $("#themeBtn").setAttribute("aria-label", T(UI.theme));
-  $("#tocBtn").setAttribute("aria-label", T(LBL.openToc));
   $("#tocTitle").textContent = T(LBL.contents);
   $("#tocClose").setAttribute("aria-label", T(LBL.close));
   $("#railTitle").textContent = T(LBL.contents);
-  const NEXT = { en: "中文", zh: "BM", ms: "EN" };
-  const NAME = { en: "English", zh: "中文", ms: "Bahasa Melayu" };
-  $("#langNow").textContent = { en: "EN", zh: "中文", ms: "BM" }[lang];
-  $("#langBtn").setAttribute("aria-label", T(UI.lang) + ": " + NAME[lang]);
-  $("#langBtn").title = NAME[lang] + " → " + NEXT[lang];
+  $("#navToc").textContent = T(LBL.contents);
+  $("#navNotes").textContent = T(LBL.notes);
+  $("#navBm").textContent = T(LBL.bookmarks);
+  $("#navSet").textContent = T(LBL.settings);
+  $("#bottomnav").setAttribute("aria-label", T(LBL.menu));
+  $("#setLangH").textContent = T(LBL.language);
+  $("#setThemeH").textContent = T(LBL.theme);
+  $("#setThemeLight").textContent = T(LBL.light);
+  $("#setThemeDark").textContent = T(LBL.dark);
+  $("#setReadH").textContent = T(LBL.readAloud);
+  $("#libNotes").textContent = T(LBL.notes);
+  $("#libMarks").textContent = T(LBL.highlights);
+  $("#libClose").setAttribute("aria-label", T(LBL.close));
+  $$("#setLang button").forEach((b) => b.classList.toggle("on", b.dataset.lang === lang));
+  markNav();
 
   $("#heroH").textContent = T(UI.heroH);
   $("#heroP").textContent = T(UI.heroP);
@@ -671,8 +756,7 @@ function render() {
   $("#footText").textContent = T(UI.footer);
   $("#installHint").textContent = T(UI.install);
 
-  $("#aboutBtn").setAttribute("aria-label", T(UI.about));
-  $("#aboutTitle").textContent = T(UI.about);
+  $("#aboutTitle").textContent = T(LBL.settings);
   $("#aboutClose").setAttribute("aria-label", T(LBL.close));
   $("#aboutName").textContent = T(UI.title);
   $("#qrCap").textContent = T(UI.qrCap);
@@ -699,6 +783,10 @@ function render() {
   buildToc($("#sheetToc"), closeToc);
   buildIndex();
   observeSections();
+  keyUnits();
+  Reader.refresh();
+  if ($("#aboutSheet").classList.contains("open")) Reader.renderSettings($("#readerSet"));
+  if ($("#libSheet").classList.contains("open")) drawLib();
 
   const q = $("#search").value.trim();
   if (q) search(q);
@@ -742,8 +830,8 @@ async function checkForUpdate(opts) {
 /* 正在做某件事的人：抽屉开着、图片放大着、在搜索框里打字，或者还没选语言 */
 function appBusy() {
   const a = document.activeElement;
-  return $("#tocSheet").classList.contains("open")
-    || $("#aboutSheet").classList.contains("open")
+  return $$(".sheet.open").length > 0
+    || Reader.isBusy() || Reader.isListening()
     || $("#lightbox").classList.contains("open")
     || document.documentElement.classList.contains("firstrun")
     || !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
@@ -830,17 +918,46 @@ function init() {
   applyTheme();
   initWelcome();
 
-  $("#themeBtn").addEventListener("click", () => {
-    theme = theme === "dark" ? "light" : "dark";
+  $("#setTheme").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-theme]");
+    if (!b) return;
+    theme = b.dataset.theme;
     try { localStorage.setItem("opb-theme", theme); } catch (e) {}
     applyTheme();
   });
 
-  $("#langBtn").addEventListener("click", () => {
-    setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]);
+  $("#setLang").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-lang]");
+    if (b) setLang(b.dataset.lang);
   });
 
-  $("#tocBtn").addEventListener("click", openToc);
+  Reader.init({
+    app: "opb",
+    root: () => $("#content"),
+    units: "[data-rk]",
+    lang: () => lang,
+    where: whereOf,
+    toast: toast,
+    topOffset: () => $(".topbar").getBoundingClientRect().bottom,
+    open: (key) => { closeDrawers(); setTimeout(() => Reader.reveal(key), 30); },
+    onState: markNav,
+  });
+  Reader.onChange(() => { if ($("#libSheet").classList.contains("open")) drawLib(); });
+
+  $("#bottomnav").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-nav]");
+    if (b) navTo(b.dataset.nav);
+  });
+
+  $("#libSeg").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-kind]");
+    if (!b) return;
+    libKind = b.dataset.kind;
+    drawLib();
+  });
+  $("#libClose").addEventListener("click", closeDrawers);
+  $("#libSheet").addEventListener("click", (e) => { if (e.target.id === "libSheet") closeDrawers(); });
+
   $("#tocClose").addEventListener("click", closeToc);
   $("#tocSheet").addEventListener("click", (e) => { if (e.target.id === "tocSheet") closeToc(); });
 
@@ -855,7 +972,6 @@ function init() {
   });
   setInterval(() => { if (document.visibilityState === "visible") checkForUpdate(); }, 15 * 60e3);
 
-  $("#aboutBtn").addEventListener("click", openAbout);
   $("#aboutClose").addEventListener("click", closeAbout);
   $("#aboutSheet").addEventListener("click", (e) => { if (e.target.id === "aboutSheet") closeAbout(); });
   $("#shareBtn").addEventListener("click", shareApp);
@@ -897,8 +1013,7 @@ function init() {
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if ($("#lightbox").classList.contains("open")) closeLightbox();
-    else if ($("#tocSheet").classList.contains("open")) closeToc();
-    else if ($("#aboutSheet").classList.contains("open")) closeAbout();
+    else if ($$(".sheet.open").length && !document.querySelector(".rd-scrim")) closeDrawers();
   });
 
   render();

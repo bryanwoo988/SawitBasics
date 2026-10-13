@@ -13,7 +13,8 @@ interviews or their first months in the field.
 | `data.js` | All text content in three languages. **Edit this file to change wording or add topics.** |
 | `figures.js` | Which photo goes under which topic, the trilingual captions, and the Sources list. |
 | `fig-*.webp` | 83 photographs and diagrams from the handbook. |
-| `app.js` | Language switch, dark mode, search, quiz, the About & share drawer, and the update check. |
+| `app.js` | Language switch, dark mode, search, quiz, the bottom menu bar, the Settings drawer (with About & share), and the update check. |
+| `reader.js`, `reader.css` | Highlight / underline in five colours, notes, bookmarks and read-aloud. Shared with OPWiki — keep both copies identical. Saved in the browser (`opb.reader`), with export / import in Settings. |
 | `updatelogic.js` | Decides whether a newer build is live and whether to apply it now or offer it. Unit-tested. |
 | `sw.js` | Service worker — makes the app work with no signal. No version number to bump. |
 | `qr.svg` | QR code shown in the About drawer. Encodes the published URL. |

@@ -925,3 +925,46 @@ footer.page-foot p { margin: 0 0 8px; }
   .section h2 { font-size: 1.3rem; }
   .fig-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
 }
+
+/* ---------- bottom navigation, notes, read aloud (reader.css) ---------- */
+
+:root {
+  --rd-bg: var(--bg);
+  --rd-surface: var(--surface);
+  --rd-ink: var(--ink);
+  --rd-muted: var(--muted);
+  --rd-line: var(--line);
+  --rd-accent: var(--green);
+  --rd-accent-ink: #fff;
+  --rd-nav-h: 60px;
+}
+html[data-theme="dark"] { --rd-accent-ink: #0d1511; }
+
+/* room under the last line for the bottom bar, and for the player above it */
+body { padding-bottom: calc(var(--rd-nav-h) + env(safe-area-inset-bottom, 0px)); }
+html.rd-playing body { padding-bottom: calc(var(--rd-nav-h) + 120px + env(safe-area-inset-bottom, 0px)); }
+
+/* drawers stop above the bottom bar, so it can switch between them */
+.sheet { bottom: calc(var(--rd-nav-h) + env(safe-area-inset-bottom, 0px)); }
+.sheet-panel { padding-bottom: 14px; }
+html.rd-selecting .sheet { bottom: 0; }
+
+.toast { bottom: calc(var(--rd-nav-h) + env(safe-area-inset-bottom, 0px) + 14px); }
+.upd-bar { bottom: calc(var(--rd-nav-h) + env(safe-area-inset-bottom, 0px) + 10px); }
+html.rd-playing .toast, html.rd-playing .upd-bar { bottom: calc(var(--rd-nav-h) + env(safe-area-inset-bottom, 0px) + 128px); }
+.wn-bar { bottom: calc(var(--rd-nav-h) + 12px + env(safe-area-inset-bottom, 0px)) !important; }
+
+/* settings drawer */
+.set-body { display: grid; gap: 18px; padding-bottom: 10px; }
+.set-group h3 { margin: 0 0 8px; font-size: .8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.set-seg { display: flex; width: 100%; }
+.set-seg button { flex: 1; font-size: .9rem; padding: 8px 6px; }
+.set-group.about-body { border-top: 1px solid var(--line); padding-top: 16px; }
+
+/* notes drawer */
+.lib-seg { display: flex; margin: 10px 0 2px; }
+.lib-seg[hidden] { display: none; }
+.lib-seg button { flex: 1; }
+
+/* the tool bar of a selected paragraph covers the bottom bar while it is up */
+html.rd-selecting body { padding-bottom: 150px; }
