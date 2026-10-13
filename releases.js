@@ -2,6 +2,10 @@
    update the app shows the new entries once (whatsnew.js), and the About
    sheet shows the version and opens the whole list. */
 const RELEASES = [
+  { v: "1.2.0", date: "2026-10-13", notes: {
+    en: ["About & share shows the date and time of this update next to the version"],
+    zh: ["「关于与分享」里的版本号旁边会显示这一版的更新日期和时间"],
+    ms: ["Perihal & kongsi menunjukkan tarikh dan masa kemas kini ini di sebelah versi"] } },
   { v: "1.1.0", date: "2026-10-13", notes: {
     en: ["After an update the app now shows what changed: the version, the date and what is new; the full list is in About & share"],
     zh: ["App 更新后会自动弹出「更新了什么」：版本号、日期和改动内容；在「关于与分享」里可以随时查看全部更新记录"],
