@@ -21,6 +21,8 @@ const SHELL_FILES = [
   './data.js',
   './figures.js',
   './updatelogic.js',
+  './whatsnew.js',
+  './releases.js',
   './app.js',
   './manifest.webmanifest',
   './qr.svg',

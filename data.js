@@ -50,7 +50,9 @@ const UI = {
   /* ---- update ---- */
   updReady: { en: "A new version is ready", zh: "有新版本了", ms: "Versi baharu sudah sedia" },
   updNow:   { en: "Update", zh: "立即更新", ms: "Kemas kini" },
-  updLater: { en: "Later", zh: "稍后", ms: "Nanti" }
+  updLater: { en: "Later", zh: "稍后", ms: "Nanti" },
+  whatsNew: { en: "What's new", zh: "更新记录", ms: "Apa yang baharu" },
+  version:  { en: "Version", zh: "版本", ms: "Versi" }
 };
 
 /* ---------------- quick numbers ---------------- */

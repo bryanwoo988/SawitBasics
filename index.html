@@ -150,6 +150,7 @@
       <img class="about-logo" src="./logo.png" alt="" width="56" height="56">
       <div class="about-name" id="aboutName">Oil Palm Basics</div>
       <div class="about-by">Created by Bryan Woo</div>
+      <div class="about-by"><span id="aboutVer"></span> · <a href="#" id="whatsNew"></a></div>
 
       <img class="qr" id="qrImg" src="./qr.svg" alt="" width="200" height="200">
       <p class="share-cap" id="qrCap"></p>
@@ -209,7 +210,7 @@
 
    按顺序加载，app.js 最后。 */
 (function () {
-  var APP_SCRIPTS = ['data.js', 'figures.js', 'updatelogic.js', 'app.js'];
+  var APP_SCRIPTS = ['data.js', 'figures.js', 'updatelogic.js', 'whatsnew.js', 'releases.js', 'app.js'];
   var r = encodeURIComponent(document.lastModified || '');
   APP_SCRIPTS.forEach(function (src) {
     var s = document.createElement('script');

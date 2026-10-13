@@ -682,6 +682,8 @@ function render() {
   $("#updGo").textContent = T(UI.updNow);
   $("#updLater").textContent = T(UI.updLater);
   $("#aboutUrl").textContent = APP_URL.replace(/^https:\/\//, "");
+  $("#aboutVer").textContent = T(UI.version) + " " + WhatsNew.label(RELEASES);
+  $("#whatsNew").textContent = T(UI.whatsNew);
 
   const main = $("#content");
   main.innerHTML = "";
@@ -902,6 +904,11 @@ function init() {
   render();
   restoreAfterUpdate();
   checkForUpdate();
+
+  /* after an update: what changed, once */
+  WhatsNew.init({ version: APP_VERSION, releases: RELEASES, key: "opb-seen-version",
+    lang: () => lang, isNewUser: () => firstRun });
+  $("#whatsNew").addEventListener("click", (e) => { e.preventDefault(); WhatsNew.history(); });
 
   if (!window.matchMedia("(display-mode: standalone)").matches) {
     $("#installHint").classList.add("show");
