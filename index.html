@@ -35,8 +35,21 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./styles.css">
-<link rel="stylesheet" href="./reader.css">
+<script>
+/* 样式表跟脚本一样以 ?r=<这个 index.html 的版本> 请求。
+
+   不加的话，还装着旧 service worker（cache-first）的手机或电脑会拿到新的
+   index.html 和新脚本，却配着几个星期前缓存里的旧 styles.css —— 新的底部
+   菜单栏没有颜色、欢迎画面没有样式，全部叠在一起。带上版本之后，任何缓存
+   都没见过这个地址，页面和样式永远是同一版。document.write 让它们像普通的
+   <link> 一样在第一帧之前载入。 */
+(function () {
+  var r = encodeURIComponent(document.lastModified || '');
+  document.write('<link rel="stylesheet" href="./styles.css?r=' + r + '">' +
+                 '<link rel="stylesheet" href="./reader.css?r=' + r + '">');
+})();
+</script>
+<noscript><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./reader.css"></noscript>
 
 <script>
 /* Runs before the first frame, so neither decision can flash.

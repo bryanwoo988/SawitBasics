@@ -2,6 +2,10 @@
    update the app shows the new entries once (whatsnew.js), and the Settings
    drawer shows the version and opens the whole list. */
 const RELEASES = [
+  { v: "1.3.1", date: "2026-10-14", notes: {
+    en: ["Fixed: on some computers and phones the new bottom menu and the colour tool bar showed without a background and overlapped each other"],
+    zh: ["修好：部分电脑和手机上，新的底部菜单和画线工具栏没有底色、叠在一起"],
+    ms: ["Dibaiki: pada sesetengah komputer dan telefon, menu bawah baharu dan bar alat warna dipaparkan tanpa latar dan bertindih"] } },
   { v: "1.3.0", date: "2026-10-13", notes: {
     en: ["Highlight or underline any paragraph in five colours: tap it, pick Highlight or Underline, then a colour",
          "Add your own notes and bookmarks to any paragraph; find them all under Notes and Bookmarks",
