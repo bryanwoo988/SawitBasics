@@ -11,8 +11,18 @@ const firstRun = document.documentElement.classList.contains("firstrun");
 let lang = localStorage.getItem("opb-lang");
 if (!LANGS.includes(lang)) lang = "en";
 
-let theme = document.documentElement.getAttribute("data-theme");
-if (theme !== "light" && theme !== "dark") theme = "light";
+/* Mode is what the reader picked (system follows the phone); each side has its
+   own look. The prepaint script in index.html mirrors applyTheme(). */
+const LOOKS = { light: ["classic", "paper", "mint", "lavender"], dark: ["midnight", "oled", "slate", "grape"] };
+const stored = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const keep = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+let mode = stored("opb-theme");
+if (mode !== "light" && mode !== "dark") mode = "system";
+const look = {
+  light: LOOKS.light.includes(stored("opb-look-light")) ? stored("opb-look-light") : "classic",
+  dark: LOOKS.dark.includes(stored("opb-look-dark")) ? stored("opb-look-dark") : "midnight"
+};
+const darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -58,8 +68,22 @@ const LBL = {
   settings: { en: "Settings", zh: "设置", ms: "Tetapan" },
   language: { en: "Language", zh: "语言", ms: "Bahasa" },
   theme: { en: "Theme", zh: "外观", ms: "Tema" },
+  system: { en: "System", zh: "跟随系统", ms: "Sistem" },
   light: { en: "Light", zh: "浅色", ms: "Cerah" },
   dark: { en: "Dark", zh: "深色", ms: "Gelap" },
+  themeNote: { en: "In System mode the app follows your phone: your light theme when the phone is light, your dark theme when it is dark.",
+               zh: "「跟随系统」时，手机为浅色就用浅色主题，为深色就用深色主题。",
+               ms: "Dalam mod Sistem, apl mengikut telefon anda: tema cerah apabila telefon cerah, tema gelap apabila telefon gelap." },
+  lightLooks: { en: "Light theme", zh: "浅色主题", ms: "Tema cerah" },
+  darkLooks: { en: "Dark theme", zh: "深色主题", ms: "Tema gelap" },
+  look_classic: { en: "Classic", zh: "经典", ms: "Klasik" },
+  look_paper: { en: "Paper", zh: "纸张", ms: "Kertas" },
+  look_mint: { en: "Mint", zh: "薄荷", ms: "Pudina" },
+  look_lavender: { en: "Lavender", zh: "薰衣草", ms: "Lavender" },
+  look_midnight: { en: "Midnight", zh: "午夜", ms: "Tengah Malam" },
+  look_oled: { en: "OLED Black", zh: "纯黑 OLED", ms: "Hitam OLED" },
+  look_slate: { en: "Slate", zh: "石板", ms: "Batu Loh" },
+  look_grape: { en: "Grape", zh: "葡萄", ms: "Anggur" },
   readAloud: { en: "Read aloud", zh: "朗读", ms: "Baca kuat" },
   stopReading: { en: "Stop", zh: "停止", ms: "Henti" },
   notes: { en: "Notes", zh: "笔记", ms: "Nota" },
@@ -72,11 +96,52 @@ const CHEV = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentC
 
 /* ---------------- theme ---------------- */
 
+/* Theme looks as small previews: page, card and accent colour of each look.
+   Keep in step with the [data-palette] blocks in styles.css. */
+const LOOK_COLOURS = {
+  classic: ["#f1f4ec", "#ffffff", "#1b6b4c"], paper: ["#f6f1e7", "#fffdf8", "#a8571a"],
+  mint: ["#eef7f3", "#ffffff", "#0b7f62"], lavender: ["#f5f3fc", "#ffffff", "#5b45c4"],
+  midnight: ["#0d1511", "#151f19", "#5cc18f"], oled: ["#000000", "#0d0d0d", "#5cc18f"],
+  slate: ["#23272f", "#2c313b", "#8cbcea"], grape: ["#17121f", "#221a2e", "#b89dff"]
+};
+
 function applyTheme() {
-  document.documentElement.setAttribute("data-theme", theme);
+  const side = mode === "system" ? (darkMQ.matches ? "dark" : "light") : mode;
+  const d = document.documentElement;
+  d.setAttribute("data-theme", side);
+  d.setAttribute("data-palette", look[side]);
+  // the browser bar takes the page colour of the look in use
   const meta = $('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", theme === "dark" ? "#0d1511" : "#f1f4ec");
-  $$("#setTheme button").forEach((b) => b.classList.toggle("on", b.dataset.theme === theme));
+  if (meta) meta.setAttribute("content", getComputedStyle(d).getPropertyValue("--bg").trim() || "#f1f4ec");
+  $$("#setTheme button").forEach((b) => b.classList.toggle("on", b.dataset.mode === mode));
+  $$(".look").forEach((b) => {
+    const on = look[b.dataset.side] === b.dataset.look;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", String(on));
+  });
+}
+
+function buildLooks() {
+  for (const side of ["light", "dark"]) {
+    const host = $(side === "light" ? "#setLightLook" : "#setDarkLook");
+    for (const n of LOOKS[side]) {
+      const [bg, surface, accent] = LOOK_COLOURS[n];
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "look";
+      b.dataset.side = side;
+      b.dataset.look = n;
+      b.innerHTML = `<span class="look-prev" style="background:${bg}"><span class="look-card" style="background:${surface}"><i style="background:${accent}"></i><b></b></span></span><span class="look-name"></span>`;
+      // picking a look also shows it: a light look switches a fixed dark mode to light, and back
+      b.addEventListener("click", () => {
+        look[side] = n;
+        keep(side === "light" ? "opb-look-light" : "opb-look-dark", n);
+        if (mode !== "system" && mode !== side) { mode = side; keep("opb-theme", mode); }
+        applyTheme();
+      });
+      host.appendChild(b);
+    }
+  }
 }
 
 /* ---------------- figures ---------------- */
@@ -741,8 +806,13 @@ function render() {
   $("#bottomnav").setAttribute("aria-label", T(LBL.menu));
   $("#setLangH").textContent = T(LBL.language);
   $("#setThemeH").textContent = T(LBL.theme);
+  $("#setThemeSystem").textContent = T(LBL.system);
   $("#setThemeLight").textContent = T(LBL.light);
   $("#setThemeDark").textContent = T(LBL.dark);
+  $("#setThemeNote").textContent = T(LBL.themeNote);
+  $("#setLightLookH").textContent = T(LBL.lightLooks);
+  $("#setDarkLookH").textContent = T(LBL.darkLooks);
+  $$(".look").forEach((b) => { $(".look-name", b).textContent = T(LBL["look_" + b.dataset.look]); });
   $("#setReadH").textContent = T(LBL.readAloud);
   $("#libNotes").textContent = T(LBL.notes);
   $("#libMarks").textContent = T(LBL.highlights);
@@ -915,16 +985,19 @@ function showUpdateBar() {
 
 function init() {
   quizState = QUIZ.map(() => null);
+  buildLooks();
   applyTheme();
   initWelcome();
 
   $("#setTheme").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-theme]");
+    const b = e.target.closest("[data-mode]");
     if (!b) return;
-    theme = b.dataset.theme;
-    try { localStorage.setItem("opb-theme", theme); } catch (e) {}
+    mode = b.dataset.mode;
+    if (mode === "system") { try { localStorage.removeItem("opb-theme"); } catch (e) {} }
+    else keep("opb-theme", mode);
     applyTheme();
   });
+  darkMQ.addEventListener("change", () => { if (mode === "system") applyTheme(); });
 
   $("#setLang").addEventListener("click", (e) => {
     const b = e.target.closest("[data-lang]");

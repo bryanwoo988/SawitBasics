@@ -2,6 +2,10 @@
    update the app shows the new entries once (whatsnew.js), and the Settings
    drawer shows the version and opens the whole list. */
 const RELEASES = [
+  { v: "1.5.0", date: "2026-10-18", notes: {
+    en: ["Settings now offers System, Light and Dark modes, four light themes (Classic, Paper, Mint, Lavender) and four dark themes (Midnight, OLED Black, Slate, Grape). In System mode the app uses your chosen light theme when your phone is light and your dark theme when it is dark"],
+    zh: ["设置里新增「跟随系统」模式，以及 4 种浅色主题（经典、纸张、薄荷、薰衣草）和 4 种深色主题（午夜、纯黑 OLED、石板、葡萄）。「跟随系统」时，手机为浅色就用你选的浅色主题，为深色就用你选的深色主题"],
+    ms: ["Tetapan kini ada mod Sistem, Cerah dan Gelap, empat tema cerah (Klasik, Kertas, Pudina, Lavender) dan empat tema gelap (Tengah Malam, Hitam OLED, Batu Loh, Anggur). Dalam mod Sistem, apl menggunakan tema cerah pilihan anda apabila telefon cerah dan tema gelap apabila telefon gelap"] } },
   { v: "1.4.0", date: "2026-10-14", notes: {
     en: ["Long-press and drag to select just a few words or a sentence, then highlight or underline it, pick a colour, or add a note (as in the Bible app); tap marked words to change the colour, add a note or remove it",
          "Marks on selected words show in the language they were made in (the same sentence uses different words in each language); the Notes list says which language. Tapping a whole paragraph works as before"],

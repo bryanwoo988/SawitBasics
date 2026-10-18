@@ -71,6 +71,9 @@
     if (t !== "light" && t !== "dark")
       t = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     d.setAttribute("data-theme", t);
+    var looks = t === "dark" ? ["midnight", "oled", "slate", "grape"] : ["classic", "paper", "mint", "lavender"];
+    var look = localStorage.getItem(t === "dark" ? "opb-look-dark" : "opb-look-light");
+    d.setAttribute("data-palette", looks.indexOf(look) >= 0 ? look : looks[0]);
   } catch (e) {
     /* localStorage can throw in private mode: show the picker, keep the
        default theme — never leave the app unusable over a preference */
@@ -157,9 +160,15 @@
       <section class="set-group">
         <h3 id="setThemeH">Theme</h3>
         <div class="rd-seg set-seg" id="setTheme">
-          <button type="button" data-theme="light" id="setThemeLight">Light</button>
-          <button type="button" data-theme="dark" id="setThemeDark">Dark</button>
+          <button type="button" data-mode="system" id="setThemeSystem">System</button>
+          <button type="button" data-mode="light" id="setThemeLight">Light</button>
+          <button type="button" data-mode="dark" id="setThemeDark">Dark</button>
         </div>
+        <p class="theme-note" id="setThemeNote"></p>
+        <h4 class="set-sub" id="setLightLookH">Light theme</h4>
+        <div class="looks" id="setLightLook"></div>
+        <h4 class="set-sub" id="setDarkLookH">Dark theme</h4>
+        <div class="looks" id="setDarkLook"></div>
       </section>
       <section class="set-group">
         <h3 id="setReadH">Read aloud</h3>
